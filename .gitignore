@@ -1,0 +1,7 @@
+*.dSYM
+source/.DS_Store
+*.o
+.DS_Store
+unit_test
+simon
+*.pch
