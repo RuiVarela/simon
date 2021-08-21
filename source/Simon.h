@@ -15,7 +15,10 @@ namespace re
 
         void step();
         void update();
+
         void render();
+        void renderBackground();
+        void renderCell(Cell& cell);
 
     private:
         struct Implementation;

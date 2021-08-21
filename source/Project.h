@@ -60,5 +60,5 @@
 #include "WaitEvent.h"
 #include "Worker.h"
 
-#include "Simon.h"
 #include "Cell.h"
+#include "Simon.h"
