@@ -15,6 +15,7 @@ namespace re
 
         void step();
         void update();
+        void checkPresses();
 
         void render();
         void renderBackground();

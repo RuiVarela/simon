@@ -20,7 +20,16 @@ namespace re
         ~Cell();
 
         Kind kind();
+        Color const& centerColor();
         Color const& color();
+
+        Vector2 const& center();
+        Rectangle const& scissor();
+        float const& radius();
+
+        bool inside(Vector2 position);
+
+        void computeSizeParameters(int screen_w, int screen_h);
 
     private:
         struct Implementation;

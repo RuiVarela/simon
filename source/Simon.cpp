@@ -40,6 +40,38 @@ Simon::~Simon()
 
 void Simon::update()
 {
+
+    if (m->base_pass.id == -1 || IsWindowResized())
+    {
+        //
+        // Setup Base Pass
+        //
+        if (m->base_pass.id != -1)
+        {
+            UnloadRenderTexture(m->base_pass);
+            m->base_pass.id = -1;
+        }
+        m->base_pass = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+        SetTextureFilter(m->base_pass.texture, FILTER_BILINEAR);
+
+        //
+        // setup cell sizes
+        //
+        for (auto &cell : m->cells)
+            cell.computeSizeParameters(GetScreenWidth(), GetScreenHeight());
+    }
+
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
+        Vector2 mouse_posiion = GetMousePosition();
+        for (auto &cell : m->cells)
+        {
+            if (cell.inside(mouse_posiion))
+            {
+                logDbg("Simon", sfmt("Click: %d", cell.kind()));
+            }
+        }
+    }
 }
 
 void Simon::renderBackground()
@@ -61,76 +93,35 @@ void Simon::renderBackground()
 
 void Simon::renderCell(Cell &cell)
 {
-    Rectangle scisor;
-    scisor.width = GetScreenWidth() / 2;
-    scisor.height = GetScreenHeight() / 2;
-    scisor.x = 0;
-    scisor.y = 0;
-
-    int center_x = GetScreenWidth() / 2;
-    int center_y = GetScreenHeight() / 2;
-    float radius = re::minimum(center_x, center_y) * 0.8f;
-
-    if (cell.kind() == Cell::CellTL)
-    {
-    }
-    else if (cell.kind() == Cell::CellTR)
-    {
-        scisor.x += scisor.width;
-    }
-    else if (cell.kind() == Cell::CellBL)
-    {
-        scisor.y += scisor.height;
-    }
-    else if (cell.kind() == Cell::CellBR)
-    {
-        scisor.x += scisor.width;
-        scisor.y += scisor.height;
-    }
-
-    float thickness = 0.015f;
+    float thickness = 0.01f;
     const Color border_color = OLD_LAVANDER;
 
     Vector2 v_line_start;
-    v_line_start.x = center_x;
-    v_line_start.y = float(center_y) - radius;
+    v_line_start.x = cell.center().x;
+    v_line_start.y = float(cell.center().y) - cell.radius();
     Vector2 v_line_end;
-    v_line_end.x = center_x;
-    v_line_end.y = float(center_y) + radius;
+    v_line_end.x = cell.center().x;
+    v_line_end.y = float(cell.center().y) + cell.radius();
 
     Vector2 h_line_start;
-    h_line_start.x = float(center_x) - radius;
-    h_line_start.y = center_y;
+    h_line_start.x = float(cell.center().x) - cell.radius();
+    h_line_start.y = cell.center().y;
     Vector2 h_line_end;
-    h_line_end.x = float(center_x) + radius;
-    h_line_end.y = center_y;
+    h_line_end.x = float(cell.center().x) + cell.radius();
+    h_line_end.y = cell.center().y;
 
-    BeginScissorMode(scisor.x, scisor.y, scisor.width, scisor.height);
+    BeginScissorMode(cell.scissor().x, cell.scissor().y, cell.scissor().width, cell.scissor().height);
     {
-        DrawCircle(center_x, center_y, radius * (1.0 + thickness), border_color);
-        DrawCircle(center_x, center_y, radius, cell.color());
-        DrawLineEx(h_line_start, h_line_end, radius * thickness, border_color);
-        DrawLineEx(v_line_start, v_line_end, radius * thickness, border_color);
+        DrawCircle(cell.center().x, cell.center().y, cell.radius() * (1.0 + thickness), border_color);
+        DrawCircleGradient(cell.center().x, cell.center().y, cell.radius(), cell.centerColor(), cell.color());
+        DrawLineEx(h_line_start, h_line_end, cell.radius() * thickness, border_color);
+        DrawLineEx(v_line_start, v_line_end, cell.radius() * thickness, border_color);
     }
     EndScissorMode();
 }
 
 void Simon::render()
 {
-    //
-    // Setup Base Pass
-    //
-    if (m->base_pass.id == -1 || IsWindowResized())
-    {
-        if (m->base_pass.id != -1)
-        {
-            UnloadRenderTexture(m->base_pass);
-            m->base_pass.id = -1;
-        }
-        m->base_pass = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
-        SetTextureFilter(m->base_pass.texture, FILTER_BILINEAR); // Texture scale filter to use
-    }
-
     //
     // Render Base Pass
     //
@@ -169,7 +160,9 @@ void Simon::step()
 
 void Simon::run()
 {
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    SetTraceLogLevel(LOG_DEBUG);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE /*| FLAG_MSAA_4X_HINT*/);
+
     InitWindow(800, 450, "Dear Simon");
 
     SetTargetFPS(60);
