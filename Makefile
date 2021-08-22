@@ -18,7 +18,7 @@ LDFLAGS=-L./vendor/raylib
 LDLIBS=-lc++ -lraylib -framework OpenGL -framework CoreVideo -framework IOKit -framework Cocoa -framework GLUT
 
 ifeq ($(DEBUG), 1)
-	CPPFLAGS +=-Wall -pedantic
+	CPPFLAGS +=-g -Wall -pedantic
 	LDFLAGS +=-g
 else
 	CPPFLAGS += -O3 -flto -DNDEBUG

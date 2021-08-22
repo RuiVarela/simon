@@ -20,6 +20,7 @@ namespace re
         ~Cell();
 
         Kind kind();
+        Color const& color();
 
     private:
         struct Implementation;
