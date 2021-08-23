@@ -61,17 +61,20 @@ void Simon::update()
             cell.computeSizeParameters(GetScreenWidth(), GetScreenHeight());
     }
 
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
-    {
-        Vector2 mouse_posiion = GetMousePosition();
-        for (auto &cell : m->cells)
-        {
-            if (cell.inside(mouse_posiion))
-            {
-                logDbg("Simon", sfmt("Click: %d", cell.kind()));
-            }
-        }
-    }
+    //
+    // button pressed
+    //
+    bool pressed = IsMouseButtonDown(MOUSE_LEFT_BUTTON);
+
+    Vector2 mouse_posiion = GetMousePosition();
+    for (auto &cell : m->cells)
+        cell.setPressed(pressed && cell.inside(mouse_posiion));
+    
+    //
+    // cell update
+    //
+    for (auto &cell : m->cells)
+        cell.update();
 }
 
 void Simon::renderBackground()

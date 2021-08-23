@@ -27,7 +27,9 @@ namespace re
         Rectangle const& scissor();
         float const& radius();
 
+        void update();
         bool inside(Vector2 position);
+        void setPressed(bool pressed);
 
         void computeSizeParameters(int screen_w, int screen_h);
 
