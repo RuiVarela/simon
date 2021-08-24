@@ -60,5 +60,6 @@
 #include "WaitEvent.h"
 #include "Worker.h"
 
+#include "Tone.h"
 #include "Cell.h"
 #include "Simon.h"

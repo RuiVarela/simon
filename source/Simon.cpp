@@ -23,9 +23,7 @@ struct Simon::Implementation
 
     RenderTexture2D base_pass;
 
-    std::array<Cell, 4> cells{
-        Cell::CellTL, Cell::CellTR,
-        Cell::CellBL, Cell::CellBR};
+    std::vector<Cell> cells;
 };
 
 Simon::Simon()
@@ -69,7 +67,7 @@ void Simon::update()
     Vector2 mouse_posiion = GetMousePosition();
     for (auto &cell : m->cells)
         cell.setPressed(pressed && cell.inside(mouse_posiion));
-    
+
     //
     // cell update
     //
@@ -167,8 +165,14 @@ void Simon::run()
     SetConfigFlags(FLAG_WINDOW_RESIZABLE /*| FLAG_MSAA_4X_HINT*/);
 
     InitWindow(800, 450, "Dear Simon");
+    InitAudioDevice();              // Initialize audio device
 
     SetTargetFPS(60);
+
+    m->cells.push_back(Cell::CellTL);
+    m->cells.push_back(Cell::CellTR);
+    m->cells.push_back(Cell::CellBL);
+    m->cells.push_back(Cell::CellBR);
 
     while (!WindowShouldClose())
     {
@@ -181,5 +185,8 @@ void Simon::run()
         m->base_pass.id = -1;
     }
 
+    m->cells.clear();
+
+    CloseAudioDevice();
     CloseWindow();
 }

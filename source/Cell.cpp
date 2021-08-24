@@ -26,6 +26,8 @@ namespace re
         Color color;
 
         bool pressed;
+
+        Tone tone;
     };
 
     Cell::Cell(Kind kind)
@@ -33,6 +35,7 @@ namespace re
         m = std::make_shared<Implementation>();
         m->kind = kind;
         m->pressed = false;
+
 
         if (kind == Kind::CellTL)
         {
@@ -127,6 +130,22 @@ namespace re
 
     void Cell::update()
     {
+        //
+        // Start Sound
+        //
+        if (!m->tone.started()) {
+
+            m->tone.start(440);
+
+        } else {
+            m->tone.mute(!m->animating);
+            m->tone.update();
+        }
+
+
+        // 
+        // Animation
+        //
         if (m->animating)
         {
             if (m->timer.hasExpired(STATE_CHANGE_TIME))
