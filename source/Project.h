@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <cctype>
 #include <iomanip>
+#include <random>
 
 #include <array>
 #include <vector>

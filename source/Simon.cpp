@@ -14,6 +14,13 @@ using namespace re;
 #define OLD_LAVANDER \
     CLITERAL(Color) { 119, 104, 113, 255 }
 
+enum GameState
+{
+    PlayBackCells,
+    PlayBackCell,
+    WaitPlayBackCellEnd
+};
+
 struct Simon::Implementation
 {
     Implementation()
@@ -24,6 +31,12 @@ struct Simon::Implementation
     RenderTexture2D base_pass;
 
     std::vector<Cell> cells;
+    std::vector<int> levels;
+    size_t current_level;
+    size_t current_level_step;
+
+    GameState state;
+    ElapsedTimer state_timer;
 };
 
 Simon::Simon()
@@ -34,6 +47,23 @@ Simon::Simon()
 Simon::~Simon()
 {
     m.reset();
+}
+
+void Simon::restartGame()
+{
+    m->levels.clear();
+
+    std::random_device rd;
+    std::default_random_engine engine(rd());
+    std::uniform_int_distribution<int> distribution(0, 3);
+
+    for (int i = 0; i != 250; ++i)
+    {
+        m->levels.push_back(distribution(engine));
+    }
+
+    m->current_level = 1;
+    m->state = GameState::PlayBackCells;
 }
 
 void Simon::update()
@@ -60,13 +90,53 @@ void Simon::update()
     }
 
     //
-    // button pressed
+    // Game Logic
     //
-    bool pressed = IsMouseButtonDown(MOUSE_LEFT_BUTTON);
+    if (m->state == GameState::PlayBackCells)
+    {
+        m->current_level_step = 0;
+        m->state_timer.invalidate();
+        m->state = GameState::PlayBackCell;
+    }
+    else if (m->state == GameState::PlayBackCell)
+    {
 
-    Vector2 mouse_posiion = GetMousePosition();
-    for (auto &cell : m->cells)
-        cell.setPressed(pressed && cell.inside(mouse_posiion));
+        if (!m->state_timer.isValid())
+        {
+            int cell = m->levels[m->current_level_step];
+            m->cells[cell].setPressed(true);
+
+            logDbg("Simon", sfmt("Playback cell level=%d cell=%d", m->current_level_step, cell));
+            m->state_timer.restart();
+        }
+        else if (m->state_timer.hasExpired(500))
+        {
+            m->state = GameState::WaitPlayBackCellEnd;
+            for (auto &cell : m->cells)
+                cell.setPressed(false);
+            m->state_timer.restart();
+        }
+    }
+    else if (m->state == GameState::WaitPlayBackCellEnd)
+    {
+        if (m->state_timer.hasExpired(200))
+        {
+            m->current_level_step++;
+            m->state = GameState::PlayBackCell;
+            m->state_timer.invalidate();
+        }
+    }
+    else
+    {
+        //
+        // button pressed
+        //
+        bool pressed = IsMouseButtonDown(MOUSE_LEFT_BUTTON);
+
+        Vector2 mouse_posiion = GetMousePosition();
+        for (auto &cell : m->cells)
+            cell.setPressed(pressed && cell.inside(mouse_posiion));
+    }
 
     //
     // cell update
@@ -134,7 +204,7 @@ void Simon::render()
             renderCell(cell);
         }
 
-        DrawText(re::sfmt("Screen Size %d %d", GetScreenWidth(), GetScreenHeight()).c_str(),
+        DrawText(re::sfmt("Level %d [%d]", m->current_level, m->current_level_step).c_str(),
                  20, 20, 20, LIGHTGRAY);
     }
     EndTextureMode();
@@ -165,7 +235,7 @@ void Simon::run()
     SetConfigFlags(FLAG_WINDOW_RESIZABLE /*| FLAG_MSAA_4X_HINT*/);
 
     InitWindow(800, 450, "Dear Simon");
-    InitAudioDevice();              // Initialize audio device
+    InitAudioDevice(); // Initialize audio device
 
     SetTargetFPS(60);
 
@@ -173,6 +243,8 @@ void Simon::run()
     m->cells.push_back(Cell::CellTR);
     m->cells.push_back(Cell::CellBL);
     m->cells.push_back(Cell::CellBR);
+
+    restartGame();
 
     while (!WindowShouldClose())
     {

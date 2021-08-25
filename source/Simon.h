@@ -21,6 +21,8 @@ namespace re
         void renderBackground();
         void renderCell(Cell& cell);
 
+        void restartGame();
+
     private:
         struct Implementation;
         std::shared_ptr<Implementation> m;

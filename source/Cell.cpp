@@ -36,7 +36,6 @@ namespace re
         m->kind = kind;
         m->pressed = false;
 
-
         if (kind == Kind::CellTL)
         {
             m->center_color = CLITERAL(Color){192, 255, 255, 255};
@@ -133,17 +132,28 @@ namespace re
         //
         // Start Sound
         //
-        if (!m->tone.started()) {
+        if (!m->tone.started())
+        {
+            float frequency = 440.0f;
 
-            m->tone.start(440);
+            if (kind() == Kind::CellTL)
+                frequency = 195.998f;
+            else if (kind() == Kind::CellTR)
+                frequency = 329.628f;
+            else if (kind() == Kind::CellBL)
+                frequency = 130.813f;
+            else if (kind() == Kind::CellBR)
+                frequency = 164.814f;
 
-        } else {
+            m->tone.start(frequency);
+        }
+        else
+        {
             m->tone.mute(!m->animating);
             m->tone.update();
         }
 
-
-        // 
+        //
         // Animation
         //
         if (m->animating)
@@ -175,7 +185,6 @@ namespace re
                 m->radius = m->base_radius + (m->target_radius - m->base_radius) * percentage;
 
                 m->color.a = m->base_color.a - (unsigned char)(100.0f * percentage);
-
             }
         }
     }
