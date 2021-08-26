@@ -15,6 +15,7 @@ namespace re
 
         void step();
         void update();
+        bool processGameLogic();
         void checkPresses();
 
         void render();

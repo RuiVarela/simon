@@ -18,7 +18,9 @@ enum GameState
 {
     PlayBackCells,
     PlayBackCell,
-    WaitPlayBackCellEnd
+    WaitPlayBackCellEnd,
+
+    InformPlayerShouldStart
 };
 
 struct Simon::Implementation
@@ -37,6 +39,8 @@ struct Simon::Implementation
 
     GameState state;
     ElapsedTimer state_timer;
+    
+    std::string center_message;
 };
 
 Simon::Simon()
@@ -47,6 +51,64 @@ Simon::Simon()
 Simon::~Simon()
 {
     m.reset();
+}
+
+bool Simon::processGameLogic()
+{
+    if (m->state == GameState::PlayBackCells)
+    {
+        m->current_level_step = 0;
+        m->state_timer.invalidate();
+        m->state = GameState::PlayBackCell;
+        m->center_message = "";
+    }
+    else if (m->state == GameState::PlayBackCell)
+    {
+
+        if (!m->state_timer.isValid())
+        {
+            int cell = m->levels[m->current_level_step];
+            m->cells[cell].setPressed(true);
+
+            logDbg("Simon", sfmt("Playback cell level=%d cell=%d", m->current_level_step, cell));
+            m->state_timer.restart();
+        }
+        else if (m->state_timer.hasExpired(500))
+        {
+            m->state = GameState::WaitPlayBackCellEnd;
+            for (auto &cell : m->cells)
+                cell.setPressed(false);
+            m->state_timer.restart();
+        }
+    }
+    else if (m->state == GameState::WaitPlayBackCellEnd)
+    {
+        if (m->state_timer.hasExpired(200))
+        {
+            if (m->current_level_step == m->current_level)
+            {
+                m->current_level_step = 0;
+                m->state = GameState::InformPlayerShouldStart;
+                m->state_timer.restart();
+                m->center_message = "Go!";
+            }
+            else
+            {
+                m->current_level_step++;
+                m->state = GameState::PlayBackCell;
+                m->state_timer.invalidate();
+            }
+        }
+    }
+    else if (m->state == GameState::InformPlayerShouldStart)
+    {
+        if (m->state_timer.hasExpired(1500))
+        {
+            m->state = GameState::PlayBackCells;
+        }
+    }
+
+    return false;
 }
 
 void Simon::restartGame()
@@ -62,7 +124,7 @@ void Simon::restartGame()
         m->levels.push_back(distribution(engine));
     }
 
-    m->current_level = 1;
+    m->current_level = 5;
     m->state = GameState::PlayBackCells;
 }
 
@@ -92,41 +154,7 @@ void Simon::update()
     //
     // Game Logic
     //
-    if (m->state == GameState::PlayBackCells)
-    {
-        m->current_level_step = 0;
-        m->state_timer.invalidate();
-        m->state = GameState::PlayBackCell;
-    }
-    else if (m->state == GameState::PlayBackCell)
-    {
-
-        if (!m->state_timer.isValid())
-        {
-            int cell = m->levels[m->current_level_step];
-            m->cells[cell].setPressed(true);
-
-            logDbg("Simon", sfmt("Playback cell level=%d cell=%d", m->current_level_step, cell));
-            m->state_timer.restart();
-        }
-        else if (m->state_timer.hasExpired(500))
-        {
-            m->state = GameState::WaitPlayBackCellEnd;
-            for (auto &cell : m->cells)
-                cell.setPressed(false);
-            m->state_timer.restart();
-        }
-    }
-    else if (m->state == GameState::WaitPlayBackCellEnd)
-    {
-        if (m->state_timer.hasExpired(200))
-        {
-            m->current_level_step++;
-            m->state = GameState::PlayBackCell;
-            m->state_timer.invalidate();
-        }
-    }
-    else
+    if (processGameLogic())
     {
         //
         // button pressed
@@ -202,6 +230,34 @@ void Simon::render()
         for (auto &cell : m->cells)
         {
             renderCell(cell);
+        }
+
+
+
+        if (!m->center_message.empty())
+        {
+            float font_size = 34.0f;
+
+            int size = MeasureText(m->center_message.c_str(), font_size);
+            int x = (GetScreenWidth() - size) / 2;
+            int y = (GetScreenHeight() - font_size) / 2;
+
+            int margin = 10;
+
+            Rectangle region;
+            region.x = x - margin;
+            region.y = y - margin;
+            region.width = size + 2 * margin;
+            region.height = font_size + 2 * margin;
+
+            Color c_start = RAYWHITE;
+            Color c_mid = MINT_CREAM;
+            Color c_end = BEAU_BLUE;
+
+            DrawRectangleGradientEx(region, c_mid, c_start, c_mid, c_end);
+            DrawRectangleLinesEx(region, font_size * 0.1f, OLD_LAVANDER);
+
+            DrawText(m->center_message.c_str(), x, y, font_size, OLD_LAVANDER);
         }
 
         DrawText(re::sfmt("Level %d [%d]", m->current_level, m->current_level_step).c_str(),
