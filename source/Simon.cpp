@@ -25,7 +25,10 @@ enum GameState
     InformPlayerShouldStart,
     WaitForInput,
 
-    WaitPlayBackStart
+    WaitPlayBackStart,
+
+    ShowHome,
+    ShowPause,
 };
 
 struct Simon::Implementation
@@ -47,6 +50,9 @@ struct Simon::Implementation
 
     std::string center_message;
     std::set<size_t> step_input;
+
+    Menu start_menu;
+    Menu game_menu;
 };
 
 Simon::Simon()
@@ -233,6 +239,15 @@ void Simon::update()
     //
     for (auto &cell : m->cells)
         cell.update();
+
+    //
+    // GUI
+    //
+    if (m->state == GameState::ShowHome)
+        m->start_menu.update();
+
+    if (m->state == GameState::ShowPause)
+        m->game_menu.update();
 }
 
 void Simon::renderBackground()
@@ -322,6 +337,13 @@ void Simon::render()
 
         DrawText(re::sfmt("Level %d [%d]", m->current_level + 1, m->current_level_step + 1).c_str(),
                  20, 20, 20, LIGHTGRAY);
+
+        if (m->state == GameState::ShowHome)
+            m->start_menu.render();
+
+        if (m->state == GameState::ShowPause)
+            m->game_menu.render();
+        
     }
     EndTextureMode();
 
@@ -350,7 +372,7 @@ void Simon::run()
     SetTraceLogLevel(LOG_DEBUG);
     SetConfigFlags(FLAG_WINDOW_RESIZABLE /*| FLAG_MSAA_4X_HINT*/);
 
-    InitWindow(800, 450, "Dear Simon");
+    InitWindow(800, 450, "Baby Simon");
     InitAudioDevice(); // Initialize audio device
 
     SetTargetFPS(60);
@@ -360,7 +382,14 @@ void Simon::run()
     m->cells.push_back(Cell::CellBL);
     m->cells.push_back(Cell::CellBR);
 
+    m->start_menu.addButton("button_play.png", []() { logDbg("HELLO", "button_play.png") });
+
+    m->game_menu.addButton("button_restart.png", []() { logDbg("HELLO", "button_restart.png") });
+    m->game_menu.addButton("button_resume.png", []() { logDbg("HELLO", "button_resume.png") });
+
     restartGame();
+    m->state = GameState::ShowHome;
+    m->state = GameState::ShowPause;
 
     while (!WindowShouldClose())
     {
@@ -373,6 +402,8 @@ void Simon::run()
         m->base_pass.id = -1;
     }
 
+    m->start_menu.clear();
+    m->game_menu.clear();
     m->cells.clear();
 
     CloseAudioDevice();

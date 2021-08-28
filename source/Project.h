@@ -65,4 +65,5 @@
 #include "Tone.h"
 #include "Cell.h"
 #include "Button.h"
+#include "Menu.h"
 #include "Simon.h"

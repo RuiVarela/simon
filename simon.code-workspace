@@ -83,7 +83,8 @@
 			"streambuf": "cpp",
 			"thread": "cpp",
 			"typeinfo": "cpp",
-			"set": "cpp"
+			"set": "cpp",
+			"memory_resource": "cpp"
 		}
 	}
 }
