@@ -218,4 +218,9 @@ namespace re
 
         m->pressed = pressed;
     }
+    
+    bool Cell::isPressed() 
+    {
+        return m->pressed;
+    }
 }

@@ -18,6 +18,7 @@
 
 #include <array>
 #include <vector>
+#include <set>
 #include <list>
 #include <memory>
 #include <algorithm>
@@ -63,4 +64,5 @@
 
 #include "Tone.h"
 #include "Cell.h"
+#include "Button.h"
 #include "Simon.h"

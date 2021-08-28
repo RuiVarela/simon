@@ -30,6 +30,7 @@ namespace re
         void update();
         bool inside(Vector2 position);
         void setPressed(bool pressed);
+        bool isPressed();
 
         void computeSizeParameters(int screen_w, int screen_h);
 

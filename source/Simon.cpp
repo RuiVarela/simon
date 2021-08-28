@@ -1,6 +1,8 @@
 #include "Project.h"
 #include "../vendor/raylib/raylib.h"
 
+#define MESSAGES_TIME 1000
+
 using namespace re;
 
 #define MINT_CREAM \
@@ -20,7 +22,10 @@ enum GameState
     PlayBackCell,
     WaitPlayBackCellEnd,
 
-    InformPlayerShouldStart
+    InformPlayerShouldStart,
+    WaitForInput,
+
+    WaitPlayBackStart
 };
 
 struct Simon::Implementation
@@ -39,8 +44,9 @@ struct Simon::Implementation
 
     GameState state;
     ElapsedTimer state_timer;
-    
+
     std::string center_message;
+    std::set<size_t> step_input;
 };
 
 Simon::Simon()
@@ -102,7 +108,63 @@ bool Simon::processGameLogic()
     }
     else if (m->state == GameState::InformPlayerShouldStart)
     {
-        if (m->state_timer.hasExpired(1500))
+        if (m->state_timer.hasExpired(MESSAGES_TIME))
+        {
+            m->state = GameState::WaitForInput;
+            m->center_message = "";
+            for (auto &cell : m->cells)
+                cell.setPressed(false);
+            m->current_level_step = 0;
+        }
+    }
+    else if (m->state == GameState::WaitForInput)
+    {
+        bool all_released = true;
+        for (size_t i = 0; i != m->cells.size(); ++i)
+        {
+            if (m->cells[i].isPressed())
+            {
+                all_released = false;
+                m->step_input.insert(i);
+            }
+        }
+
+        if (all_released && !m->step_input.empty())
+        {
+            int cell = m->levels[m->current_level_step];
+            bool correct = (m->step_input.size() == 1) && (m->step_input.count(cell) == 1);
+            m->step_input.clear();
+
+            if (correct)
+            {
+                if (m->current_level_step == m->current_level)
+                {
+                    m->state = GameState::WaitPlayBackStart;
+                    m->state_timer.restart();
+                    m->center_message = "Very Well!";
+
+                    m->current_level = (m->current_level + 1) % m->levels.size();
+                }
+                else
+                {
+                    m->current_level_step++;
+                }
+            }
+            else
+            {
+                m->state = GameState::WaitPlayBackStart;
+                m->state_timer.restart();
+                m->center_message = "Try Again!";
+            }
+        }
+        else
+        {
+            return true;
+        }
+    }
+    else if (m->state == GameState::WaitPlayBackStart)
+    {
+        if (m->state_timer.hasExpired(MESSAGES_TIME))
         {
             m->state = GameState::PlayBackCells;
         }
@@ -119,12 +181,12 @@ void Simon::restartGame()
     std::default_random_engine engine(rd());
     std::uniform_int_distribution<int> distribution(0, 3);
 
-    for (int i = 0; i != 250; ++i)
+    for (int i = 0; i != 2500; ++i)
     {
         m->levels.push_back(distribution(engine));
     }
 
-    m->current_level = 5;
+    m->current_level = 0;
     m->state = GameState::PlayBackCells;
 }
 
@@ -161,9 +223,9 @@ void Simon::update()
         //
         bool pressed = IsMouseButtonDown(MOUSE_LEFT_BUTTON);
 
-        Vector2 mouse_posiion = GetMousePosition();
+        Vector2 mouse_position = GetMousePosition();
         for (auto &cell : m->cells)
-            cell.setPressed(pressed && cell.inside(mouse_posiion));
+            cell.setPressed(pressed && cell.inside(mouse_position));
     }
 
     //
@@ -232,8 +294,6 @@ void Simon::render()
             renderCell(cell);
         }
 
-
-
         if (!m->center_message.empty())
         {
             float font_size = 34.0f;
@@ -260,7 +320,7 @@ void Simon::render()
             DrawText(m->center_message.c_str(), x, y, font_size, OLD_LAVANDER);
         }
 
-        DrawText(re::sfmt("Level %d [%d]", m->current_level, m->current_level_step).c_str(),
+        DrawText(re::sfmt("Level %d [%d]", m->current_level + 1, m->current_level_step + 1).c_str(),
                  20, 20, 20, LIGHTGRAY);
     }
     EndTextureMode();
