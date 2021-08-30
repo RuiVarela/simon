@@ -177,6 +177,11 @@ bool Simon::processGameLogic()
             m->state = GameState::PlayBackCells;
         }
     }
+    else if (m->state == GameState::ShowPause)
+    {
+        for (auto &cell : m->cells)
+            cell.setPressed(false);
+    }
 
     return false;
 }
@@ -195,6 +200,7 @@ void Simon::restartGame()
     }
 
     m->current_level = 0;
+    m->current_level_step = 0;
     m->state = GameState::PlayBackCells;
 }
 

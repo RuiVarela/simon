@@ -40,6 +40,9 @@ namespace re
 
         // Computed size in samples of the sine wave
         int m_waveLength;
+
+        int m_samples_to_filter_count;
+        int m_samples_filtered;
     };
 
 }

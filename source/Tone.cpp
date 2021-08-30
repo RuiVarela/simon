@@ -66,8 +66,10 @@ namespace re
             }
         }
 
-        SetAudioStreamVolume(m_stream, m_muted ? 0.0f : 1.0f);
-        
+        m_muted = false;
+        mute(true);
+        m_samples_filtered = -1;
+
         m_started = true;
     }
 
@@ -109,12 +111,44 @@ namespace re
                 if (writeLength > readLength)
                     writeLength = readLength;
 
-                // Write the slice
-                memcpy(m_writeBuf + writeCursor, m_data + m_readCursor, writeLength * sizeof(short));
+                // avoids popings on audio by interpolating a few frames on the beginning and end
+                if (m_samples_filtered > -1)
+                {
+                    for (int i = 0; i != writeLength; ++i)
+                    {
+                        float percent = float(m_samples_filtered) / float(m_samples_to_filter_count);
+                        percent = re::clampTo(percent, 0.0f, 1.0f);
+                        if (m_muted)
+                            percent = 1.0f - percent;
+
+                        float value = *(m_data + m_readCursor + i);
+                        value *= percent;
+
+                        *(m_writeBuf + writeCursor + i) = short(value);
+
+                        m_samples_filtered += 1;
+                    }
+
+                    // set as done
+                    if (m_samples_filtered >= m_samples_to_filter_count)
+                        m_samples_filtered = -1;
+                }
+                else
+                {
+                    if (m_muted)
+                    {
+                        // Write zeros - mute it
+                        memset(m_writeBuf + writeCursor, 0, writeLength * sizeof(short));
+                    }
+                    else
+                    {
+                        // Write the slice
+                        memcpy(m_writeBuf + writeCursor, m_data + m_readCursor, writeLength * sizeof(short));
+                    }
+                }
 
                 // Update cursors and loop audio
                 m_readCursor = (m_readCursor + writeLength) % m_waveLength;
-
                 writeCursor += writeLength;
             }
 
@@ -130,7 +164,8 @@ namespace re
 
         m_muted = value;
 
-        if (m_started)
-            SetAudioStreamVolume(m_stream, value ? 0.0f : 1.0f);
+        m_samples_filtered = 0;
+        m_samples_to_filter_count = MAX_SAMPLES_PER_UPDATE * 2;
+        //SetAudioStreamVolume(m_stream, m_muted ? 0.0f : 1.0f);
     }
 }
