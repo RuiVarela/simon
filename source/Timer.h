@@ -7,29 +7,34 @@ namespace re
 	class Timer
 	{
 	public:
-		typedef Uint64 TickType;
 		typedef Uint64 OperationCount;
 
-		Timer() 
-			:start_tick(0), seconds_per_tick(0.0)
+		Timer()
 		{
 			start();
 		}
 
-		~Timer(){ }
+		~Timer()
+		{
+		}
 
 		// Starts the timer
-		void start();
+		void start()
+		{
+			start_ = std::chrono::high_resolution_clock::now();
+			initialize();
+		}
 
-		// total time elapse since start();
 		Real64 elapsedTime() const
 		{
-			return (Real64) (getTick() - start_tick) * seconds_per_tick;
+			return elapsedTimeMilliseconds() / 1000.0;
 		}
 
 		Real64 elapsedTimeMilliseconds() const
 		{
-			return elapsedTime() * 1000.0;
+			auto now = std::chrono::high_resolution_clock::now();
+			Real64 millis = std::chrono::duration<Real64, std::milli>(now - start_).count();
+			return millis;
 		}
 
 		// Operation time
@@ -68,11 +73,9 @@ namespace re
 		}
 
 	private:
-		TickType getTick() const;
-
 		void initialize()
 		{
-			last_time_= 0.0;
+			last_time_ = 0.0;
 			operation_time_ = 0.0;
 			operation_ = 0;
 		}
@@ -80,79 +83,78 @@ namespace re
 		Real64 last_time_;
 		Real64 operation_time_;
 		OperationCount operation_;
-		TickType start_tick;
-		Real64 seconds_per_tick;
+		std::chrono::time_point<std::chrono::high_resolution_clock> start_;
 	};
 
+	Int64 getCurrentMs();
 
-    Int64 getCurrentMs();
-
-	class ElapsedTimer 
+	class ElapsedTimer
 	{
-		public:
-			ElapsedTimer() 
-			{
-				invalidate();
-			}
+	public:
+		ElapsedTimer()
+		{
+			invalidate();
+		}
 
-			void start()
-			{
-				restart();
-			}
+		void start()
+		{
+			restart();
+		}
 
-			Int64 restart() 
-			{
-				Int64 value = elapsed();
-				start_ts = timer.elapsedTime();
-				return value;
-			}
+		Int64 restart()
+		{
+			Int64 value = elapsed();
+			start_ts = timer.elapsedTime();
+			return value;
+		}
 
-			void invalidate() 
-			{
-				start_ts = -1.0;
-			}
+		void invalidate()
+		{
+			start_ts = -1.0;
+		}
 
-			bool isValid() const 
-			{
-				return start_ts >= 0.0;
-			}
+		bool isValid() const
+		{
+			return start_ts >= 0.0;
+		}
 
-			Int64 elapsed() const 
-			{
-				return Int64( (timer.elapsedTime() - start_ts) * 1000.0 );
-			}
+		Int64 elapsed() const
+		{
+			return Int64((timer.elapsedTime() - start_ts) * 1000.0);
+		}
 
-			bool hasExpired(Int64 timeout) const {
-				// if timeout is -1, quint64(timeout) is LLINT_MAX, so this will be
-				// considered as never expired
-				return Uint64(elapsed()) > Uint64(timeout);
-			}
-		private:
-			Timer timer;
-			Real64 start_ts;
+		bool hasExpired(Int64 timeout) const
+		{
+			// if timeout is -1, quint64(timeout) is LLINT_MAX, so this will be
+			// considered as never expired
+			return Uint64(elapsed()) > Uint64(timeout);
+		}
+
+	private:
+		Timer timer;
+		Real64 start_ts;
 	};
 
+	class DurationProbe
+	{
+	public:
+		DurationProbe(size_t samples = 25, std::string const &tag = "DurationProbe");
+		~DurationProbe();
+		void setTag(std::string const &tag);
+		void setPrefix(std::string const &prefix);
 
+		void Start();
+		void Stop(int warningInterval = 5000);
 
-    class DurationProbe {
-    public:
-        DurationProbe(size_t samples = 25, std::string const& tag = "DurationProbe");
-        ~DurationProbe();
-        void setTag(std::string const& tag);
-        void setPrefix(std::string const& prefix);
-
-        void Start();
-        void Stop(int warningInterval = 5000);
-    private:
-        MeanBufferFloat m_time_mean; // measures the time between start and stop calls
-        MeanBufferFloat m_starts_time_mean; // measures the time between start calls
-        float m_time_max;
-        float m_time_min;
-        std::chrono::high_resolution_clock::time_point m_start;
-        ElapsedTimer m_elased_timer;
-        std::string m_prefix;
-        std::string TAG;
-    };
+	private:
+		MeanBufferFloat m_time_mean;		// measures the time between start and stop calls
+		MeanBufferFloat m_starts_time_mean; // measures the time between start calls
+		float m_time_max;
+		float m_time_min;
+		std::chrono::high_resolution_clock::time_point m_start;
+		ElapsedTimer m_elased_timer;
+		std::string m_prefix;
+		std::string TAG;
+	};
 
 } // end of namespace
-

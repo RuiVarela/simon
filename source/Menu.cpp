@@ -18,10 +18,15 @@ namespace re
 
     void Menu::addButton(std::string const &resource, std::function<void(void)> callback)
     {
-        MenuItem item;
-        item.button = std::make_shared<Button>(resource);
-        item.callback = callback;
+        std::shared_ptr<Button> item = std::make_shared<Button>(resource);
+        item->setCallback(callback);
         m_items.push_back(item);
+    }
+
+    void Menu::setActive(bool active)
+    {
+        for (auto &item : m_items)
+            item->setActive(active);
     }
 
     void Menu::update()
@@ -39,9 +44,9 @@ namespace re
 
             for (auto &item : m_items)
             {
-                item.button->update(base_scale);
+                item->update(Button::Profile::Menu, base_scale);
 
-                int height = item.button->height();
+                int height = item->height();
                 if (height > max_height)
                     max_height = height;
 
@@ -71,21 +76,22 @@ namespace re
 
         for (auto &item : m_items)
         {
-            position.x = (GetScreenWidth() - item.button->width()) / 2;
+            position.x = (GetScreenWidth() - item->width()) / 2;
 
-            item.button->setPosition(position);
+            item->setPosition(position);
 
-            position.y += item.button->height();
+            position.y += item->height();
             position.y += margin;
         }
+
+        // run callbacks
+        for (auto &item : m_items)
+            item->checkTrigger();
     }
 
     void Menu::render()
     {
-
         for (auto &item : m_items)
-        {
-            item.button->render();
-        }
+            item->render();
     }
 }

@@ -34,6 +34,7 @@ enum GameState
 struct Simon::Implementation
 {
     Implementation()
+
     {
         base_pass.id = -1;
     }
@@ -53,6 +54,7 @@ struct Simon::Implementation
 
     Menu start_menu;
     Menu game_menu;
+    std::shared_ptr<Button> game_button;
 };
 
 Simon::Simon()
@@ -243,11 +245,13 @@ void Simon::update()
     //
     // GUI
     //
-    if (m->state == GameState::ShowHome)
-        m->start_menu.update();
+    m->start_menu.setActive(m->state == GameState::ShowHome);
+    m->game_menu.setActive(m->state == GameState::ShowPause);
+    m->game_button->setActive(m->state != GameState::ShowHome);
 
-    if (m->state == GameState::ShowPause)
-        m->game_menu.update();
+    m->start_menu.update();
+    m->game_menu.update();
+    m->game_button->update(Button::Profile::ScreenRightCorner);
 }
 
 void Simon::renderBackground()
@@ -340,10 +344,12 @@ void Simon::render()
 
         if (m->state == GameState::ShowHome)
             m->start_menu.render();
-
-        if (m->state == GameState::ShowPause)
+        else if (m->state == GameState::ShowPause)
             m->game_menu.render();
-        
+        else
+        {
+            m->game_button->render();
+        }
     }
     EndTextureMode();
 
@@ -367,7 +373,7 @@ void Simon::step()
     render();
 }
 
-void Simon::run()
+void Simon::setup()
 {
     SetTraceLogLevel(LOG_DEBUG);
     SetConfigFlags(FLAG_WINDOW_RESIZABLE /*| FLAG_MSAA_4X_HINT*/);
@@ -382,30 +388,47 @@ void Simon::run()
     m->cells.push_back(Cell::CellBL);
     m->cells.push_back(Cell::CellBR);
 
-    m->start_menu.addButton("button_play.png", []() { logDbg("HELLO", "button_play.png") });
+    m->start_menu.addButton("button_play.png", [this]()
+                            { restartGame(); });
+    m->game_menu.addButton("button_restart.png", [this]()
+                           { restartGame(); });
 
-    m->game_menu.addButton("button_restart.png", []() { logDbg("HELLO", "button_restart.png") });
-    m->game_menu.addButton("button_resume.png", []() { logDbg("HELLO", "button_resume.png") });
+    m->game_menu.addButton("button_resume.png", [this]()
+                           { m->state = GameState::PlayBackCells; });
+
+    m->game_button = std::make_shared<Button>("button_menu.png");
+    m->game_button->setCallback([this]()
+                                {
+                                    m->center_message = "";
+                                    m->state = GameState::ShowPause;
+                                });
 
     restartGame();
     m->state = GameState::ShowHome;
-    m->state = GameState::ShowPause;
+}
 
-    while (!WindowShouldClose())
-    {
-        step();
-    }
-
+void Simon::shutdown()
+{
     if (m->base_pass.id != -1)
     {
         UnloadRenderTexture(m->base_pass);
         m->base_pass.id = -1;
     }
 
+    m->game_button.reset();
     m->start_menu.clear();
     m->game_menu.clear();
     m->cells.clear();
 
     CloseAudioDevice();
     CloseWindow();
+}
+
+void Simon::run()
+{
+
+    while (!WindowShouldClose())
+    {
+        step();
+    }
 }

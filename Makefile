@@ -21,7 +21,7 @@ ifeq ($(DEBUG), 1)
 	CPPFLAGS +=-g -Wall -pedantic
 	LDFLAGS +=-g
 else
-	CPPFLAGS += -O3 -flto -DNDEBUG
+	CPPFLAGS += -O3 -DNDEBUG
 endif
 
 SRCS=$(shell find ./source -name "*.cpp")

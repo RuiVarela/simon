@@ -11,7 +11,9 @@ namespace re
         Simon();
         ~Simon();
 
+        void setup();
         void run();
+        void shutdown();
 
         void step();
         void update();

@@ -12,17 +12,13 @@ namespace re
 
         void clear();
 
+        void setActive(bool active);
         void addButton(std::string const& resource, std::function<void(void)> callback);
         void update();
         void render();
 
     private:
-        struct MenuItem {
-            std::shared_ptr<Button> button;
-            std::function<void(void)> callback;
-        };
-
-        std::vector<MenuItem> m_items;
+        std::vector<std::shared_ptr<Button>> m_items;
     };
 
 }
