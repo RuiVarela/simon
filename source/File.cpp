@@ -24,36 +24,40 @@ namespace re
 		//TODO review this, should not add the folder name
 		DirectoryContents contents;
 
-		for (const auto &entry : std::filesystem::directory_iterator(directory_name)) {
+#ifdef HAS_STD_FILESYSTEM
+		for (const auto &entry : std::filesystem::directory_iterator(directory_name))
 			contents.push_back(getSimpleFileName(entry.path()));
-		}
+#endif //HAS_STD_FILESYSTEM
 
 		return contents;
 	}
 
 	std::string getCurrentDirectory()
 	{
+#ifdef HAS_STD_FILESYSTEM
 		return std::filesystem::current_path();
+#else
+		return "";
+#endif //HAS_STD_FILESYSTEM
 	}
 
 	Bool makeDirectory(std::string const &path)
 	{
 		if (path.empty())
 			return false;
-		
+
 		if (fileType(path) == FileDirectory)
 			return false;
-		
+
 		std::string dir = path;
 		std::vector<std::string> paths;
 		while (true)
 		{
 			if (dir == g_root_path)
 				break;
-			
+
 			if (dir.empty())
 				break;
-			
 
 			// TODO: review this
 			if (fileType(path) == FileNotFound)
@@ -78,8 +82,12 @@ namespace re
 				continue;
 			}
 
+#ifdef HAS_STD_FILESYSTEM
 			if (!std::filesystem::create_directory(dir))
 				return false;
+#else
+			return false;
+#endif //HAS_STD_FILESYSTEM
 
 			paths.pop_back();
 		}
@@ -89,6 +97,7 @@ namespace re
 
 	FileType fileType(std::string const &filename)
 	{
+#ifdef HAS_STD_FILESYSTEM
 		auto status = std::filesystem::status(filename);
 
 		if (std::filesystem::is_directory(status))
@@ -99,6 +108,7 @@ namespace re
 		{
 			return FileRegular;
 		}
+#endif //HAS_STD_FILESYSTEM
 
 		return FileNotFound;
 	}
@@ -110,15 +120,30 @@ namespace re
 
 	Uint64 fileSize(std::string const &filename)
 	{
+		Uint64 size = 0;
+
+#ifdef HAS_STD_FILESYSTEM
+
 		std::filesystem::path path(filename);
-		Uint64 size = std::filesystem::file_size(path);
+		size = std::filesystem::file_size(path);
+
+#endif //HAS_STD_FILESYSTEM
+
 		return size;
 	}
 
 	Bool fileExists(std::string const &filename)
 	{
+		bool output = false;
+
+#ifdef HAS_STD_FILESYSTEM
+
 		auto status = std::filesystem::status(filename);
-		return std::filesystem::exists(status);
+		output = std::filesystem::exists(status);
+
+#endif //HAS_STD_FILESYSTEM
+
+		return output;
 	}
 
 	std::string getFilePath(std::string const &filename)
@@ -145,12 +170,28 @@ namespace re
 
 	Uint removeFile(const std::string &path)
 	{
-		return std::filesystem::remove(path) ? 1 : 0;
+		Uint count = 0;
+
+#ifdef HAS_STD_FILESYSTEM
+
+		count = std::filesystem::remove(path) ? 1 : 0;
+
+#endif //HAS_STD_FILESYSTEM
+
+		return count;
 	}
 
 	Uint removeFolder(const std::string &path)
 	{
-		return std::filesystem::remove_all(path);
+		Uint count = 0;
+
+#ifdef HAS_STD_FILESYSTEM
+
+		count = std::filesystem::remove_all(path);
+
+#endif //HAS_STD_FILESYSTEM
+
+		return count;
 	}
 
 	std::string getSimpleFileName(std::string const &filename)

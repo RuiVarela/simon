@@ -1,5 +1,7 @@
 #pragma once
 
+#define HAS_STD_FILESYSTEM
+
 //
 // standard template library
 //
@@ -15,7 +17,9 @@
 #include <cctype>
 #include <iomanip>
 #include <random>
+#ifdef HAS_STD_FILESYSTEM
 #include <filesystem>
+#endif //HAS_STD_FILESYSTEM
 
 #include <array>
 #include <vector>
@@ -38,7 +42,7 @@
 //
 // vendor
 //
-#include "../vendor/raylib/raylib.h"
+#include <raylib.h>
 #include "../vendor/tinyformat.h"
 #include "../vendor/json.hpp"
 

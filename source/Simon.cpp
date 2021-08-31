@@ -1,5 +1,4 @@
 #include "Project.h"
-#include "../vendor/raylib/raylib.h"
 
 #define MESSAGES_TIME 1000
 
