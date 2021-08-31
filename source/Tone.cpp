@@ -66,6 +66,7 @@ namespace re
             }
         }
 
+        m_samples_filtered = -1;
         m_muted = false;
         mute(true);
         m_samples_filtered = -1;
@@ -162,10 +163,29 @@ namespace re
         if (m_muted == value)
             return;
 
+        bool was_muted = m_muted;
         m_muted = value;
-
-        m_samples_filtered = 0;
         m_samples_to_filter_count = MAX_SAMPLES_PER_UPDATE * 2;
-        //SetAudioStreamVolume(m_stream, m_muted ? 0.0f : 1.0f);
+
+        if (m_samples_filtered == -1)
+        {
+            m_samples_filtered = 0;
+        }
+        else
+        {
+            // we need to make sure we continue from where we were
+            float percent = float(m_samples_filtered) / float(m_samples_to_filter_count);
+            percent = re::clampTo(percent, 0.0f, 1.0f);
+            if (was_muted)
+                percent = 1.0f - percent;
+
+            //logDbg("TONE", sfmt("Not finished %d %f", m_samples_filtered, percent));
+
+            // find the corresponding percentage on the reversed state
+            percent = 1.0f - percent;
+            m_samples_filtered = percent * m_samples_to_filter_count;
+
+            //logDbg("TONE", sfmt("Computed %d %f", m_samples_filtered, percent));
+        }
     }
 }

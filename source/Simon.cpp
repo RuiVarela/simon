@@ -84,7 +84,7 @@ bool Simon::processGameLogic()
             int cell = m->levels[m->current_level_step];
             m->cells[cell].setPressed(true);
 
-            logDbg("Simon", sfmt("Playback cell level=%d cell=%d", m->current_level_step, cell));
+            //logDbg("Simon", sfmt("Playback cell level=%d cell=%d", m->current_level_step, cell));
             m->state_timer.restart();
         }
         else if (m->state_timer.hasExpired(500))
