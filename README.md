@@ -25,7 +25,7 @@ source ./emsdk_env.sh
 ```
 
 ```
-make WEB=1
+make WEB=1 DEBUG=0
 python wasm-server.py
 ```
 open chrome on http://localhost:8080/simon.html

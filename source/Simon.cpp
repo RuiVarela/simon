@@ -36,9 +36,13 @@ struct Simon::Implementation
 
     {
         base_pass.id = -1;
+        screen_w = -1;
+        screen_h = -1;
     }
 
     RenderTexture2D base_pass;
+    int screen_w;
+    int screen_h;
 
     std::vector<Cell> cells;
     std::vector<int> levels;
@@ -206,7 +210,14 @@ void Simon::restartGame()
 void Simon::update()
 {
 
-    if (m->base_pass.id == -1 || IsWindowResized())
+    bool resized = false;
+    #ifdef PLATFORM_WEB
+        resized = (GetScreenWidth() != m->screen_w) || (GetScreenHeight() != m->screen_h);
+    #else
+        resized = IsWindowResized();
+    #endif
+
+    if (m->base_pass.id == -1 || resized)
     {
         //
         // Setup Base Pass
@@ -217,7 +228,7 @@ void Simon::update()
             m->base_pass.id = -1;
         }
         m->base_pass = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
-        SetTextureFilter(m->base_pass.texture, FILTER_BILINEAR);
+        SetTextureFilter(m->base_pass.texture, TEXTURE_FILTER_BILINEAR);
 
         //
         // setup cell sizes
@@ -225,6 +236,9 @@ void Simon::update()
         for (auto &cell : m->cells)
             cell.computeSizeParameters(GetScreenWidth(), GetScreenHeight());
     }
+
+    m->screen_w = GetScreenWidth();
+    m->screen_h = GetScreenHeight();
 
     //
     // Game Logic
@@ -380,13 +394,16 @@ void Simon::step()
 
 void Simon::setup()
 {
-    SetTraceLogLevel(LOG_DEBUG);
+    SetTraceLogLevel(LOG_INFO);
     SetConfigFlags(FLAG_WINDOW_RESIZABLE /*| FLAG_MSAA_4X_HINT*/);
+
 
     InitWindow(800, 450, "Baby Simon");
     InitAudioDevice(); // Initialize audio device
 
-    SetTargetFPS(60);
+#ifndef PLATFORM_WEB
+    SetTargetFPS(30);
+#endif 
 
     m->cells.push_back(Cell::CellTL);
     m->cells.push_back(Cell::CellTR);

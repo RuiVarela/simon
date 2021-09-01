@@ -31,7 +31,7 @@ namespace re
         SetAudioStreamBufferSizeDefault(MAX_SAMPLES_PER_UPDATE);
 
         // Init raw audio stream (sample rate: 22050, sample size: 16bit-short, channels: 1-mono)
-        m_stream = InitAudioStream(44100, 16, 1);
+        m_stream = LoadAudioStream(44100, 16, 1);
 
         // Buffer for the single cycle waveform we are synthesizing
         m_data = (short *)malloc(sizeof(short) * MAX_SAMPLES);
@@ -78,7 +78,7 @@ namespace re
     {
         if (m_started)
         {
-            CloseAudioStream(m_stream); // Close raw audio stream and delete buffers from RAM
+            UnloadAudioStream(m_stream); // Close raw audio stream and delete buffers from RAM
             m_started = false;
         }
 
