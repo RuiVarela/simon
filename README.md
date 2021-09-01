@@ -6,8 +6,8 @@ A simon game done to my kid. let's see if he uses it.
 
 ## Building
 This was coded on a mac, but it should be very portable.   
-The only dependency needed is [raylib](https://www.raylib.com/). They seem to provide releases on their github page.   
-Just place the `raylib.h` and `raylib.a` under `vendor/raylib/{env}` and update the makefile accordingly.   
+The only dependency needed is [raylib](https://www.raylib.com/). 
+Build raylib and place the `raylib.h` and `libraylib.a` under `vendor/raylib/{env}` and update the makefile accordingly.   
 
 ```
 make

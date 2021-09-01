@@ -18,8 +18,9 @@ LDLIBS=-lraylib
 
 ifeq ($(WEB), 1)
 	CXX=emcc
-	CPPFLAGS+=-I./vendor/raylib/webassembly/include
-	LDFLAGS+=-L./vendor/raylib/webassembly/lib
+
+	CPPFLAGS+=-I./vendor/raylib/webassembly
+	LDFLAGS+=-L./vendor/raylib/webassembly
 
 # -Os                        # size optimization
 # -O2                        # optimization level 2, if used, also set --memory-init-file 0
@@ -36,7 +37,10 @@ ifeq ($(WEB), 1)
 # --preload-file resources   # specify a resources folder for data compilation
 # --source-map-base          # allow debugging in browser with source map
 #CPPFLAGS+=-s USE_PTHREADS=1
-	LDFLAGS+=-s USE_GLFW=3 -s WASM=1 -s ASYNCIFY -s ASSERTIONS=1 --source-map-base simon.map
+#LDFLAGS+=-s USE_GLFW=3 -s WASM=1 -s ASYNCIFY -s ASSERTIONS=1 --source-map-base simon.map
+	CPPFLAGS+=-DPLATFORM_WEB
+
+	LDFLAGS+=-s USE_GLFW=3
 	LDFLAGS+=--preload-file button_menu.png
 	LDFLAGS+=--preload-file button_play.png
 	LDFLAGS+=--preload-file button_restart.png
