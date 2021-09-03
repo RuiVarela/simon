@@ -19,6 +19,8 @@ namespace re
         Cell(Kind kind);
         ~Cell();
 
+        void enableAudio();
+
         Kind kind();
         Color const& centerColor();
         Color const& color();

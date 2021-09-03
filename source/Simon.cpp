@@ -38,6 +38,7 @@ struct Simon::Implementation
         base_pass.id = -1;
         screen_w = -1;
         screen_h = -1;
+        audio_started = false;
     }
 
     RenderTexture2D base_pass;
@@ -58,6 +59,7 @@ struct Simon::Implementation
     Menu start_menu;
     Menu game_menu;
     std::shared_ptr<Button> game_button;
+    bool audio_started;
 };
 
 Simon::Simon()
@@ -399,7 +401,6 @@ void Simon::setup()
 
 
     InitWindow(800, 450, "Baby Simon");
-    InitAudioDevice(); // Initialize audio device
 
 #ifndef PLATFORM_WEB
     SetTargetFPS(30);
@@ -410,8 +411,16 @@ void Simon::setup()
     m->cells.push_back(Cell::CellBL);
     m->cells.push_back(Cell::CellBR);
 
-    m->start_menu.addButton("button_play.png", [this]()
-                            { restartGame(); });
+    m->start_menu.addButton("button_play.png", [this]() { 
+        restartGame(); 
+
+        InitAudioDevice(); // Initialize audio device
+        
+        // audio can only start in response to a click
+        for (auto &cell : m->cells)
+            cell.enableAudio();
+    });
+
     m->game_menu.addButton("button_restart.png", [this]()
                            { restartGame(); });
 
@@ -442,7 +451,10 @@ void Simon::shutdown()
     m->game_menu.clear();
     m->cells.clear();
 
-    CloseAudioDevice();
+    if (m->audio_started) {
+        CloseAudioDevice();
+    }
+
     CloseWindow();
 }
 

@@ -127,7 +127,7 @@ namespace re
         return m->kind;
     }
 
-    void Cell::update()
+    void Cell::enableAudio()
     {
         //
         // Start Sound
@@ -147,7 +147,11 @@ namespace re
 
             m->tone.start(frequency);
         }
-        else
+    }
+
+    void Cell::update()
+    {
+        if (m->tone.started())
         {
             m->tone.mute(!m->animating);
             m->tone.update();
@@ -218,8 +222,8 @@ namespace re
 
         m->pressed = pressed;
     }
-    
-    bool Cell::isPressed() 
+
+    bool Cell::isPressed()
     {
         return m->pressed;
     }
