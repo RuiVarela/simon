@@ -2,7 +2,9 @@
 Simon says.  
 A simon game done to my kid. let's see if he uses it.
 
-![Simon](https://github.com/RuiVarela/simon/raw/master/demo.gif)
+![Simon](https://github.com/RuiVarela/simon/raw/master/demo.gif)   
+
+[Web Demo](https://simon.demanda.pt/)
 
 ## Building
 This was coded on a mac, but it should be very portable.   
