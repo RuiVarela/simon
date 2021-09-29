@@ -29,20 +29,12 @@ namespace re
         // Init raw audio stream (sample rate: 22050, sample size: 16bit-short, channels: 1-mono)
         AudioStream m_stream;
 
-        // Buffer for the single cycle waveform we are synthesizing
-        short *m_data;
+        static int const m_samplerate = 44100;
+        std::array<short, 4096> m_data;
+        Int64 m_sample_count;
+        double m_volume;
+        Int64 m_volume_timestamp;
 
-        // Frame buffer, describing the waveform when repeated over the course of a frame
-        short *m_writeBuf;
-
-        // Cursor to read and copy the samples of the sine wave buffer
-        int m_readCursor ;
-
-        // Computed size in samples of the sine wave
-        int m_waveLength;
-
-        int m_samples_to_filter_count;
-        int m_samples_filtered;
     };
 
 }

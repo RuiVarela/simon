@@ -403,7 +403,7 @@ void Simon::setup()
     InitWindow(800, 450, "Baby Simon");
 
 #ifndef PLATFORM_WEB
-    SetTargetFPS(30);
+    SetTargetFPS(60);
 #endif 
 
     m->cells.push_back(Cell::CellTL);
